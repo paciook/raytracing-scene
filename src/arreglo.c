@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdlib.h>
 #include "arreglo.h"
 
 bool arreglo_agregar(arreglo_t *a, void *e){

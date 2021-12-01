@@ -1,6 +1,6 @@
 #include "luz.h"
-#include "color.h"
-#include "vector.h"
+
+#include <stdlib.h>
 
 luz_t *luz_crear(vector_t posicion, color_t color, bool es_puntual){
     luz_t *l = malloc(sizeof(luz_t));

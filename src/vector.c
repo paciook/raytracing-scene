@@ -1,5 +1,5 @@
-#include <math.h>
 #include "vector.h"
+#include <math.h>
 
 float vector_producto_interno(vector_t a, vector_t b){
     float prod = 0;

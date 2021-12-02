@@ -110,25 +110,42 @@ color_t computar_intensidad(int profundidad, const arreglo_t *objetos, const arr
     return c;
 }
 
-imagen_t *validar_argumentos(int argc, char *argv[]){
+// Funcion espantosa que valida la entrada y devuelve por interfaz los parametros
+imagen_t *validar_argumentos(int argc, char *argv[], size_t *an, size_t *al, size_t *p, char**n, bool *isB){
     if(argc != 5) {
         fprintf(stderr, "Uso: %s [ancho] [alto] [profundidad] [nombrearchivo]\n", argv[0]);
         return NULL;
     }
 
-    int ancho,alto;
-    if( ((ancho = atoi(argv[1])) <= 0) || ((alto = atoi(argv[2])) <= 0) ){
+    if( ((*an = atoi(argv[1])) <= 0) || ((*al = atoi(argv[2])) <= 0) ){
         fprintf(stderr, "Error en ancho o alto\n");
         return NULL;
     }
 
-    int profundidad;
-    if( (profundidad = atoi(argv[3])) <= 0 ){
+    if( (*p = atoi(argv[3])) <= 0 ){
         fprintf(stderr, "Error en profundidad\n");
         return NULL;
     }
 
-    imagen_t *img = imagen_crear(ancho, alto, profundidad);
+    char *nombre_archivo = (*n = argv[4]);
+    
+    // Busco la extension
+    size_t i = 0;
+    for(; nombre_archivo[i]; i++);
+    char *ext = &nombre_archivo[i-strlen(".ppm")]; // PPM y BMP comparten longitud
+    
+    // Comparo si es valida
+    if(strcmp(ext,".bmp") == 0){
+        *isB = true;
+    } else if(strcmp(ext,".ppm") == 0){
+        *isB = false;
+    } else {
+        fprintf(stderr, "Extension incorrecta\n");
+        return NULL;
+    }
+
+
+    imagen_t *img = imagen_crear(*an, *al);
 
     if(img == NULL){
         fprintf(stderr, "Error de memoria\n");
@@ -139,28 +156,33 @@ imagen_t *validar_argumentos(int argc, char *argv[]){
 }
 
 int main(int argc, char *argv[]){
+    size_t ancho,alto,prof;
+    char *nombre_archivo;
+    bool isBinary; // Si es bmp, true. Si es ppm, false. Si ninguna, error
+
     // Valido los parametros de la imagen
-    imagen_t *img = validar_argumentos(argc,argv);
+    imagen_t *img = validar_argumentos(argc,argv,&ancho,&alto,&prof,&nombre_archivo, &isBinary);
     if(img == NULL) return 1;
 
-    // Verifico el modo de impresion
-    bool isBinary; // True si bmp, false si ppm, error si ninguno.
-    char *nombre_archivo = argv[4];
-    {
-        size_t i = 0;
-        
-        for(; nombre_archivo[i]; i++);
-        char *ext = &nombre_archivo[i-strlen(".ppm")]; // PPM y BMP comparten longitud
-        
-        if(strcmp(ext,".bmp") == 0){
-            isBinary = true;
-        } else if(strcmp(ext,".ppm") == 0){
-            isBinary = false;
-        } else {
-            fprintf(stderr, "Extension incorrecta\n");
-            return 4;
+    /*
+    // Genero la imagen
+    color_t ambiente = {.05, .05, .05};
+    vector_t origen = {0, 0, 0};
+
+    float vz = ancho / 2 / tan(FOV/ 2 * PI / 180);
+    int x,y;
+    x = y = 0;
+    for(int vy = alto / 2; vy > - alto / 2; vy--){
+        for(int vx = - ancho / 2; vx < ancho / 2; vx++){
+            vector_t d = vector_normalizar((vector_t){vx, vy, vz}));
+            color_t p = computar_intensidad(&objetos, &luces, ambiente, origen, d);
+            imagen_set_pixel(img, x, y, p);
+            x++;
         }
+        x = 0;
+        y++;
     }
+    */
 
     printf("Hello%s!\n", (isBinary)?" Fran" : " World");
 

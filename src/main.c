@@ -95,13 +95,13 @@ color_t computar_intensidad(int profundidad, const arreglo_t *objetos, const arr
             c = color_sumar(c, abs, factor_angulo);
         }
     }
-    
+
     // Sumo la luz ambiente
-    c = color_sumar(c, ambiente, objeto->ka);
+    c = color_sumar(c, ambiente, obj->ka);
     
     // Sumo el color recursivo
     color_t color_rebote = computar_intensidad(profundidad - 1, objetos, luces, ambiente, p, r);
-    color_sumar(c, color_rebote, kr);
+    color_sumar(c, color_rebote, obj->kr);
 
     return c;
 }

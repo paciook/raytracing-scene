@@ -2,6 +2,7 @@
 #define OBJETOS_H
 
 #include "vector.h"
+#include "color.h"
 
 typedef struct {
     void *cuerpo;

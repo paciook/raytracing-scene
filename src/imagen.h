@@ -10,7 +10,7 @@
 struct imagen;
 typedef struct imagen imagen_t;
 
-imagen_t *imagen_crear(size_t ancho, size_t alto);
+imagen_t *imagen_crear(size_t ancho, size_t alto, size_t profundidad);
 void imagen_destruir(imagen_t *im);
 void imagen_dimensiones(const imagen_t *im, size_t *ancho, size_t *alto);
 bool imagen_set_pixel(imagen_t *im, size_t x, size_t y, color_t color);

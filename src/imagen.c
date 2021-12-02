@@ -3,9 +3,10 @@
 struct imagen {
     color_t **lienzo;
     size_t ancho, alto;
+    size_t profundidad;
 };
 
-imagen_t *imagen_crear(size_t ancho, size_t alto) {
+imagen_t *imagen_crear(size_t ancho, size_t alto, size_t profundidad) {
     imagen_t *im = malloc(sizeof(imagen_t));
     if(im == NULL) return NULL;
 
@@ -25,6 +26,7 @@ imagen_t *imagen_crear(size_t ancho, size_t alto) {
 
     im->ancho = ancho;
     im->alto = alto;
+    im->profundidad = profundidad;
 
     return im;
 }

@@ -1,11 +1,15 @@
+#include <float.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "arreglo.h"
 #include "color.h"
 #include "vector.h"
 #include "luz.h"
 #include "objetos.h"
+#include "imagen.h"
 
-#include <float.h>
-#include <stdio.h>
 #define INFINITO FLT_MAX
 
 color_t fondo = {0,0,0};
@@ -106,8 +110,60 @@ color_t computar_intensidad(int profundidad, const arreglo_t *objetos, const arr
     return c;
 }
 
-int main(void){
+imagen_t *validar_argumentos(int argc, char *argv[]){
+    if(argc != 5) {
+        fprintf(stderr, "Uso: %s [ancho] [alto] [profundidad] [nombrearchivo]\n", argv[0]);
+        return NULL;
+    }
 
-    printf("Hello world!");
+    int ancho,alto;
+    if( ((ancho = atoi(argv[1])) <= 0) || ((alto = atoi(argv[2])) <= 0) ){
+        fprintf(stderr, "Error en ancho o alto\n");
+        return NULL;
+    }
+
+    int profundidad;
+    if( (profundidad = atoi(argv[3])) <= 0 ){
+        fprintf(stderr, "Error en profundidad\n");
+        return NULL;
+    }
+
+    imagen_t *img = imagen_crear(ancho, alto, profundidad);
+
+    if(img == NULL){
+        fprintf(stderr, "Error de memoria\n");
+        return NULL;
+    }
+
+    return img;
+}
+
+int main(int argc, char *argv[]){
+    // Valido los parametros de la imagen
+    imagen_t *img = validar_argumentos(argc,argv);
+    if(img == NULL) return 1;
+
+    // Verifico el modo de impresion
+    bool isBinary; // True si bmp, false si ppm, error si ninguno.
+    char *nombre_archivo = argv[4];
+    {
+        size_t i = 0;
+        
+        for(; nombre_archivo[i]; i++);
+        char *ext = &nombre_archivo[i-strlen(".ppm")]; // PPM y BMP comparten longitud
+        
+        if(strcmp(ext,".bmp") == 0){
+            isBinary = true;
+        } else if(strcmp(ext,".ppm") == 0){
+            isBinary = false;
+        } else {
+            fprintf(stderr, "Extension incorrecta\n");
+            return 4;
+        }
+    }
+
+    printf("Hello%s!\n", (isBinary)?" Fran" : " World");
+
+    imagen_destruir(img);
     return 0;
 }

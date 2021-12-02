@@ -2,7 +2,7 @@ CFLAGS=-Wall -Werror -std=c99 -pedantic -g
 LDLIBS=-lm
 all: main
 
-main: main.o vector.o luz.o color.o arreglo.o objetos.o
+main: main.o vector.o luz.o color.o arreglo.o objetos.o imagen.o
 	gcc $(CFLAGS) *.o $(LDLIBS) -o main
 
 main.o: main.c color.h luz.h arreglo.h vector.h objetos.h imagen.h

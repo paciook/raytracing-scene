@@ -10,6 +10,13 @@
 
 color_t fondo = {0,0,0};
 
+vector_t computar_direccion_rebote(vector_t d, vector_t n){
+    // d - 2N(D.N)
+    vector_t r = vector_estirar(n, 2*vector_producto_interno(d,n));
+    r = vector_resta(d, r);
+    return r;
+}
+
 color_t computar_intensidad(int profundidad, const arreglo_t *objetos, const arreglo_t *luces, color_t ambiente, vector_t o, vector_t d){
     // Caso base: no mas pasos recursivos restantes.
     if(!profundidad) return (color_t){0,0,0};
@@ -34,8 +41,10 @@ color_t computar_intensidad(int profundidad, const arreglo_t *objetos, const arr
     // Guardo el punto de interseccion y la normal correspondientes
     
     vector_t p,n;
+    color_t c = {0,0,0}; // Color que voy a devolver
     objeto_t *obj = (objeto_t*)(objetos->v[n_obj]); // Objeto que intersecto
     objeto_distancia(obj,o,d,&p,&n);
+    vector_t r = computar_direccion_rebote(d,n);
 
     // Verifico cada luz en ese punto
 
@@ -66,13 +75,35 @@ color_t computar_intensidad(int profundidad, const arreglo_t *objetos, const arr
         }
 
         if(!hay_sombra){
-            // Agrego el color de la luz en cuestion
+            float factor_angulo;
+
+            // Calculo factor de angulo
+            {
+                // Termino del angulo de la normal
+                float prod_ln = vector_producto_interno(dir_luz,n);
+                float termino_normal = obj->kd *  (prod_ln >= 0 ? prod_ln : 0);
+
+                // Termino del angulo del rebote
+                float prod_lr = vector_producto_interno(dir_luz,r);
+                float termino_rebote = obj->ks * (prod_lr >= 0 ? prod_lr : 0);
+
+                factor_angulo = termino_normal + termino_rebote;
+            }
+            color_t abs = color_absorber(luz->color, obj->color);
+
+            // Sumo el color de la luz
+            c = color_sumar(c, abs, factor_angulo);
         }
     }
-    // Sumo el color recursivo
+    
     // Sumo la luz ambiente
+    c = color_sumar(c, ambiente, objeto->ka);
+    
+    // Sumo el color recursivo
+    color_t color_rebote = computar_intensidad(profundidad - 1, objetos, luces, ambiente, p, r);
+    color_sumar(c, color_rebote, kr);
 
-    return (color_t){0,0,0};
+    return c;
 }
 
 int main(void){

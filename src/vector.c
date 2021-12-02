@@ -25,3 +25,10 @@ vector_t vector_normalizar(vector_t a){
     float m = vector_norma(a);
     return (vector_t){a.x/m, a.y/m, a.z/m};
 }
+
+vector_t vector_estirar(vector_t a, float factor){
+    a.x *= factor;
+    a.y *= factor;
+    a.z *= factor;
+    return a;
+}

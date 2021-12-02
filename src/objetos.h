@@ -7,6 +7,7 @@ typedef struct {
     void *cuerpo;
     int tipo;
     float kd,ka,ks,kr; // ks especular, kr reflexion
+    color_t color;
 } objeto_t;
 
 objeto_t *objeto_crear(); // completar

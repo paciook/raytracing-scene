@@ -1,6 +1,5 @@
 #include "objetos.h"
 
-#include "vector.h"
 
 objeto_t *objeto_crear(); // completar
 

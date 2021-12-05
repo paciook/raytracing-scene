@@ -10,6 +10,8 @@
 #include "objetos.h"
 #include "imagen.h"
 
+#define EPS 0.01 // Factor de desplazamiento del punto P
+#define ALPHA 10 // Exponente del termino especular
 #define INFINITO FLT_MAX
 
 color_t fondo = {0,0,0};
@@ -43,11 +45,11 @@ color_t computar_intensidad(int profundidad, const arreglo_t *objetos, const arr
     }
 
     // Guardo el punto de interseccion y la normal correspondientes
-    
     vector_t p,n;
-    color_t c = {0,0,0}; // Color que voy a devolver
-    objeto_t *obj = (objeto_t*)(objetos->v[n_obj]); // Objeto que intersecto
     objeto_distancia(obj,o,d,&p,&n);
+    
+    color_t c = {0,0,0}; // Color que voy a devolver
+    objeto_t *obj = (objeto_t*)(objetos->v[n_obj]); // Objeto que interseco
     vector_t r = computar_direccion_rebote(d,n);
 
     // Verifico cada luz en ese punto
@@ -89,7 +91,7 @@ color_t computar_intensidad(int profundidad, const arreglo_t *objetos, const arr
 
                 // Termino del angulo del rebote
                 float prod_lr = vector_producto_interno(dir_luz,r);
-                float termino_rebote = obj->ks * (prod_lr >= 0 ? prod_lr : 0);
+                float termino_rebote = obj->ks * pow((prod_lr >= 0 ? prod_lr : 0), ALPHA);
 
                 factor_angulo = termino_normal + termino_rebote;
             }
@@ -104,6 +106,7 @@ color_t computar_intensidad(int profundidad, const arreglo_t *objetos, const arr
     c = color_sumar(c, ambiente, obj->ka);
     
     // Sumo el color recursivo
+    vector_interpolar_recta(p,r,EPS); // Desplazo el vector P en direccion al rebote
     color_t color_rebote = computar_intensidad(profundidad - 1, objetos, luces, ambiente, p, r);
     color_sumar(c, color_rebote, obj->kr);
 
@@ -164,8 +167,16 @@ int main(int argc, char *argv[]){
     imagen_t *img = validar_argumentos(argc,argv,&ancho,&alto,&prof,&nombre_archivo, &isBinary);
     if(img == NULL) return 1;
 
-    /*
+
+    // Genero los objetos
+    arreglo_t *objetos = objetos_generar(nombre_archivo);
+
+    // Genero las luces
+    arreglo_t *luces = luces_generar();
+
+    
     // Genero la imagen
+    /*
     color_t ambiente = {.05, .05, .05};
     vector_t origen = {0, 0, 0};
 

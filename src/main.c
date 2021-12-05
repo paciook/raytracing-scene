@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "arreglo.h"
 #include "color.h"
@@ -46,10 +47,10 @@ color_t computar_intensidad(int profundidad, const arreglo_t *objetos, const arr
 
     // Guardo el punto de interseccion y la normal correspondientes
     vector_t p,n;
+    objeto_t *obj = (objeto_t*)(objetos->v[n_obj]); // Objeto que interseco
     objeto_distancia(obj,o,d,&p,&n);
     
     color_t c = {0,0,0}; // Color que voy a devolver
-    objeto_t *obj = (objeto_t*)(objetos->v[n_obj]); // Objeto que interseco
     vector_t r = computar_direccion_rebote(d,n);
 
     // Verifico cada luz en ese punto
@@ -169,10 +170,10 @@ int main(int argc, char *argv[]){
 
 
     // Genero los objetos
-    arreglo_t *objetos = objetos_generar(nombre_archivo);
+    //arreglo_t *objetos = objetos_generar(nombre_archivo);
 
     // Genero las luces
-    arreglo_t *luces = luces_generar();
+    arreglo_t luces = luces_generar();
 
     
     // Genero la imagen

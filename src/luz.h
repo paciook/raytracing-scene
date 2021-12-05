@@ -2,6 +2,7 @@
 #define LUZ_H
 
 #include <stdbool.h>
+#include "arreglo.h"
 #include "vector.h"
 #include "color.h"
 
@@ -14,5 +15,6 @@ typedef struct {
 
 void luz_destruir(luz_t *luz);
 luz_t *luz_crear(vector_t posicion, color_t color, bool es_puntual);
+arreglo_t luces_generar();
 
 #endif

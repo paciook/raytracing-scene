@@ -173,7 +173,7 @@ int main(int argc, char *argv[]){
     //arreglo_t *objetos = objetos_generar(nombre_archivo);
 
     // Genero las luces
-    arreglo_t luces = luces_generar();
+    //arreglo_t luces = luces_generar();
 
     
     // Genero la imagen
@@ -196,8 +196,20 @@ int main(int argc, char *argv[]){
     }
     */
 
-    printf("Hello%s!\n", (isBinary)?" Fran" : " World");
+   // Imprimo la imagen
+   if(!imagen_imprimir(nombre_archivo, isBinary, img)){
+        fprintf(stderr, "No se pudo imprimir\n");
+        return 6;
+    }
 
+    printf("Hello%s!\n", (isBinary)?" Fran" : " World"); // Borrar
+
+    // Libero memoria
+    //arreglo_liberar(objetos, &objeto_destruir);
+    //arreglo_liberar(luces, &luz_destruir);
     imagen_destruir(img);
+
+    fprintf(stdout, "Imagen generada bajo el nombre %s\n", nombre_archivo);
+
     return 0;
 }

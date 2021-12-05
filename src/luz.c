@@ -1,6 +1,7 @@
 #include "luz.h"
 
 #include <stdlib.h>
+#include <assert.h>
 
 luz_t *luz_crear(vector_t posicion, color_t color, bool es_puntual){
     luz_t *l = malloc(sizeof(luz_t));
@@ -16,8 +17,6 @@ luz_t *luz_crear(vector_t posicion, color_t color, bool es_puntual){
 
 arreglo_t luces_generar(){
     arreglo_t luces = {NULL, 0};
-
-    color_t ambiente = {.05, .05, .05};
 
     assert(arreglo_agregar(&luces, luz_crear(vector_normalizar((vector_t){0, 1, 0}), (color_t){.2, .2, .2}, false)));
     assert(arreglo_agregar(&luces, luz_crear((vector_t){-2, 10, 2.5}, (color_t){.9, 0, 0}, true)));

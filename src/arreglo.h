@@ -10,5 +10,6 @@ typedef struct {
 } arreglo_t;
 
 bool arreglo_agregar(arreglo_t *a, void *e);
+void arreglo_liberar(arreglo_t *a, void (*destruir)(void*));
 
 #endif

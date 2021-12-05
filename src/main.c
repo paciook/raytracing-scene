@@ -28,16 +28,20 @@ color_t computar_intensidad(int profundidad, const arreglo_t *objetos, const arr
     // Caso base: no mas pasos recursivos restantes.
     if(!profundidad) return (color_t){0,0,0};
 
+    vector_t p,n;
     size_t n_obj; // Numero del objeto que intersecto
     float t = INFINITO; // Distancia a la interseccion
 
     // Obtengo el objeto mas cercano en la direccion en la que miro
 
     for(size_t i = 0; i < objetos->n; i++){
-        float distancia_anterior = objeto_distancia(objetos->v[i],o,d,NULL,NULL);
+        vector_t aux_p,aux_n;
+        float distancia_anterior = objeto_distancia(objetos->v[i],o,d,&aux_p,&aux_n);
         if(distancia_anterior < t){
             t = distancia_anterior;
             n_obj = i;
+            p = aux_p;
+            n = aux_n;
         }
     }
 
@@ -45,11 +49,7 @@ color_t computar_intensidad(int profundidad, const arreglo_t *objetos, const arr
         return fondo;
     }
 
-    // Guardo el punto de interseccion y la normal correspondientes
-    vector_t p,n;
     objeto_t *obj = (objeto_t*)(objetos->v[n_obj]); // Objeto que interseco
-    objeto_distancia(obj,o,d,&p,&n);
-    
     color_t c = {0,0,0}; // Color que voy a devolver
     vector_t r = computar_direccion_rebote(d,n);
 
@@ -78,13 +78,12 @@ color_t computar_intensidad(int profundidad, const arreglo_t *objetos, const arr
             if(j == n_obj) continue;
 
             float distancia_objeto = objeto_distancia(objetos->v[j],p,dir_luz,NULL,NULL);
-            if( (hay_sombra = (distancia_objeto < distancia_luz)) ) break; // If true: tengo sombra de esa luz 
+            if( (hay_sombra = (distancia_objeto < distancia_luz)) ) break;
         }
 
         if(!hay_sombra){
-            float factor_angulo;
-
             // Calculo factor de angulo
+            float factor_angulo;
             {
                 // Termino del angulo de la normal
                 float prod_ln = vector_producto_interno(dir_luz,n);
@@ -96,10 +95,10 @@ color_t computar_intensidad(int profundidad, const arreglo_t *objetos, const arr
 
                 factor_angulo = termino_normal + termino_rebote;
             }
-            color_t abs = color_absorber(luz->color, obj->color);
+            color_t c_absorvido = color_absorber(luz->color, obj->color);
 
             // Sumo el color de la luz
-            c = color_sumar(c, abs, factor_angulo);
+            c = color_sumar(c, c_absorvido, factor_angulo);
         }
     }
 
@@ -164,7 +163,7 @@ int main(int argc, char *argv[]){
     char *nombre_archivo;
     bool isBinary; // Si es bmp, true. Si es ppm, false. Si ninguna, error
 
-    // Valido los parametros de la imagen
+    // Valido los parametros de la imagen y recibo un canvas vacío
     imagen_t *img = validar_argumentos(argc,argv,&ancho,&alto,&prof,&nombre_archivo, &isBinary);
     if(img == NULL) return 1;
 

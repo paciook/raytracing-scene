@@ -32,3 +32,11 @@ vector_t vector_estirar(vector_t a, float factor){
     a.z *= factor;
     return a;
 }
+
+vector_t vector_producto_vectorial(vector_t a, vector_t b){
+    vector_t r;
+    r.x = (a.y * b.z) - (a.z * b.y);
+    r.y = (a.z * b.x) - (a.x * b.z);
+    r.z = (a.x * b.y) - (a.y * b.x);
+    return r;
+}

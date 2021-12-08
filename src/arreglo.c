@@ -15,7 +15,8 @@ bool arreglo_agregar(arreglo_t *a, void *e){
 }
 
 void arreglo_liberar(arreglo_t *a, void (*destruir)(void*)){
-    for(size_t i = 0; a->n; i++)
-        destruir(a->v[i]);
+    for(size_t i = 0; i < a->n; i++)
+        destruir((a->v)[i]);
+    free(a->v);
 }
 

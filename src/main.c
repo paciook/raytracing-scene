@@ -1,8 +1,8 @@
-#include <float.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <assert.h>
 
 #include "arreglo.h"
 #include "color.h"
@@ -11,14 +11,13 @@
 #include "objetos.h"
 #include "imagen.h"
 
-#define EPS 0.01 // Factor de desplazamiento del punto P
 #define ALPHA 10 // Exponente del termino especular
-#define INFINITO FLT_MAX
+#define FOV 90
+#define PI 3.1415926535897932
 
 color_t fondo = {0,0,0};
 
 vector_t computar_direccion_rebote(vector_t d, vector_t n){
-    // d - 2N(D.N)
     vector_t r = vector_estirar(n, 2*vector_producto_interno(d,n));
     r = vector_resta(d, r);
     return r;
@@ -28,17 +27,16 @@ color_t computar_intensidad(int profundidad, const arreglo_t *objetos, const arr
     // Caso base: no mas pasos recursivos restantes.
     if(!profundidad) return (color_t){0,0,0};
 
-    vector_t p,n;
+    vector_t p,n; // Punto y normal
     size_t n_obj; // Numero del objeto que intersecto
     float t = INFINITO; // Distancia a la interseccion
 
     // Obtengo el objeto mas cercano en la direccion en la que miro
-
     for(size_t i = 0; i < objetos->n; i++){
         vector_t aux_p,aux_n;
-        float distancia_anterior = objeto_distancia(objetos->v[i],o,d,&aux_p,&aux_n);
-        if(distancia_anterior < t){
-            t = distancia_anterior;
+        float act = objeto_distancia(objetos->v[i],o,d,&aux_p,&aux_n);
+        if(act < t){
+            t = act;
             n_obj = i;
             p = aux_p;
             n = aux_n;
@@ -48,13 +46,16 @@ color_t computar_intensidad(int profundidad, const arreglo_t *objetos, const arr
     if(t == INFINITO){
         return fondo;
     }
-
+    if(t > 2)
+        printf("%f\n", t);
+    return (color_t){1,1,1};
     objeto_t *obj = (objeto_t*)(objetos->v[n_obj]); // Objeto que interseco
     color_t c = {0,0,0}; // Color que voy a devolver
     vector_t r = computar_direccion_rebote(d,n);
 
     // Verifico cada luz en ese punto
 
+    assert(luces->n); //Borrar
     for(size_t i = 0; i < luces->n; i++){
         luz_t *luz = (luz_t*)(luces->v[i]);
 
@@ -106,15 +107,14 @@ color_t computar_intensidad(int profundidad, const arreglo_t *objetos, const arr
     c = color_sumar(c, ambiente, obj->ka);
     
     // Sumo el color recursivo
-    vector_interpolar_recta(p,r,EPS); // Desplazo el vector P en direccion al rebote
-    color_t color_rebote = computar_intensidad(profundidad - 1, objetos, luces, ambiente, p, r);
+    color_t color_rebote = computar_intensidad(profundidad - 1, objetos, luces, ambiente, vector_interpolar_recta(p,r,EPS), r);
     color_sumar(c, color_rebote, obj->kr);
 
     return c;
 }
 
 // Funcion espantosa que valida la entrada y devuelve por interfaz los parametros
-imagen_t *validar_argumentos(int argc, char *argv[], size_t *an, size_t *al, size_t *p, char**n, bool *isB){
+imagen_t *validar_argumentos(int argc, char *argv[], int *an, int *al, size_t *p, char**n, bool *isB){
     if(argc != 5) {
         fprintf(stderr, "Uso: %s [ancho] [alto] [profundidad] [nombrearchivo]\n", argv[0]);
         return NULL;
@@ -159,7 +159,8 @@ imagen_t *validar_argumentos(int argc, char *argv[], size_t *an, size_t *al, siz
 }
 
 int main(int argc, char *argv[]){
-    size_t ancho,alto,prof;
+    int ancho,alto;
+    size_t prof;
     char *nombre_archivo;
     bool isBinary; // Si es bmp, true. Si es ppm, false. Si ninguna, error
 
@@ -169,31 +170,30 @@ int main(int argc, char *argv[]){
 
 
     // Genero los objetos
-    //arreglo_t *objetos = objetos_generar(nombre_archivo);
+    arreglo_t objetos = objetos_generar(nombre_archivo);
 
     // Genero las luces
-    //arreglo_t luces = luces_generar();
+    arreglo_t luces = luces_generar();
 
     
     // Genero la imagen
-    /*
+
     color_t ambiente = {.05, .05, .05};
     vector_t origen = {0, 0, 0};
 
     float vz = ancho / 2 / tan(FOV/ 2 * PI / 180);
     int x,y;
     x = y = 0;
-    for(int vy = alto / 2; vy > - alto / 2; vy--){
-        for(int vx = - ancho / 2; vx < ancho / 2; vx++){
-            vector_t d = vector_normalizar((vector_t){vx, vy, vz}));
-            color_t p = computar_intensidad(&objetos, &luces, ambiente, origen, d);
+    for(int vy = alto / 2.0; vy > - alto / 2.0; vy--){
+        for(int vx = - ancho / 2.0; vx < ancho / 2.0; vx++) {
+            vector_t d = vector_normalizar((vector_t){vx, vy, vz});
+            color_t p = computar_intensidad(prof,&objetos, &luces, ambiente, origen, d);
             imagen_set_pixel(img, x, y, p);
             x++;
         }
         x = 0;
         y++;
     }
-    */
 
    // Imprimo la imagen
    if(!imagen_imprimir(nombre_archivo, isBinary, img)){
@@ -201,11 +201,9 @@ int main(int argc, char *argv[]){
         return 6;
     }
 
-    printf("Hello%s!\n", (isBinary)?" Fran" : " World"); // Borrar
-
     // Libero memoria
-    //arreglo_liberar(objetos, &objeto_destruir);
-    //arreglo_liberar(luces, &luz_destruir);
+    arreglo_liberar(&objetos, &objeto_destruir);
+    arreglo_liberar(&luces, &luz_destruir);
     imagen_destruir(img);
 
     fprintf(stdout, "Imagen generada bajo el nombre %s\n", nombre_archivo);

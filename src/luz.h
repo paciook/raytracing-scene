@@ -13,7 +13,7 @@ typedef struct {
     bool es_puntual;
 } luz_t;
 
-void luz_destruir(luz_t *luz);
+void luz_destruir(void *luz);
 luz_t *luz_crear(vector_t posicion, color_t color, bool es_puntual);
 arreglo_t luces_generar();
 

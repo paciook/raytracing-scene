@@ -23,7 +23,7 @@ objetos.o: objetos.c objetos.h
 color.o: color.h	
 	gcc $(CFLAGS) -c color.c
 
-arreglo.o: arreglo.h
+arreglo.o: arreglo.c arreglo.h
 	gcc $(CFLAGS) -c arreglo.c
 
 clean:

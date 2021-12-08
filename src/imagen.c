@@ -1,4 +1,5 @@
 #include "imagen.h"
+#include <stdint.h>
 
 #define BMASK 0xFF
 #define II 255
@@ -6,7 +7,6 @@
 struct imagen {
     color_t **lienzo;
     size_t ancho, alto;
-    size_t profundidad;
 };
 
 imagen_t *imagen_crear(size_t ancho, size_t alto) {
@@ -80,10 +80,10 @@ void escribir_PPM(const imagen_t *imagen, FILE *f){
     size_t ancho,alto;
     imagen_dimensiones(imagen, &ancho, &alto);
 
+    // Escribo encabezado
     fprintf(f, "P3\n%zu %zu\n255\n", ancho, alto);
 
-    // encabezado escrito
-    
+    // Escribo pixeles
     for(size_t i = 0; i < alto; i++){
         for (size_t j = 0; j < ancho; j++){
             color_t p = imagen_get_pixel(imagen, j, i);
@@ -149,22 +149,18 @@ void escribir_BMP(imagen_t *imagen, FILE *f){
 
 bool imagen_imprimir(char n[], bool isBin, imagen_t *img){
     FILE *f;
-    typedef void (*impresion_t)(imagen_t*, FILE*);
-    impresion_t imprimir;
 
     if(isBin){
         f = fopen(n, "wb");
         if(f == NULL) return false;
 
-        imprimir = (impresion_t)escribir_BMP;
+        escribir_BMP(img,f);
     } else {
-        f = fopen(n, "w");
+        f = fopen(n, "wt");
         if(f == NULL) return false;
 
-        imprimir = (impresion_t)escribir_PPM;
+        escribir_PPM(img,f);
     }
-
-    imprimir(img, f);
 
     fclose(f);
 

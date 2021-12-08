@@ -30,6 +30,6 @@ arreglo_t luces_generar(){
     return luces;
 }
 
-void luz_destruir(luz_t *luz){
+void luz_destruir(void *luz){
     free(luz);
 }

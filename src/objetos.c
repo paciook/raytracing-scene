@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <assert.h>
+#include <stdio.h>
 
 // Esferas
 
@@ -28,7 +29,7 @@ float _e_distancia(void *cuerpo, vector_t o, vector_t d,
     float t = INFINITO;
     
 	float disc = 0;
-    
+
     vector_t res = vector_resta(esfera->centro,o);
     float p_resd = vector_producto_interno(res,d);
     float rcuad = (esfera->radio)*(esfera->radio);
@@ -43,10 +44,11 @@ float _e_distancia(void *cuerpo, vector_t o, vector_t d,
         return INFINITO;
     }
 
-    if(punto != NULL)
+    if(punto != NULL){
         *punto = vector_interpolar_recta(o,d,t);
-    if(normal != NULL)
-        *normal = vector_normalizar(vector_resta(*punto,esfera->centro));
+        if(normal != NULL)
+            *normal = vector_normalizar(vector_resta(*punto,esfera->centro));
+    }
 
     return t;
 }
@@ -185,8 +187,7 @@ objeto_t *objeto_crear(void*c, tipo_t t, float kd, float ka, float ks, float kr,
 
 float objeto_distancia(objeto_t *objeto, vector_t o, vector_t d, vector_t *punto, vector_t *normal){
     cuerpo_distancia_t dist = cuerpo_distancia[objeto->tipo];
-
-    float t = dist(objeto,o,d,punto,normal);
+    float t = dist((void*)(objeto->cuerpo),o,d,punto,normal);
 
     return t;
 }

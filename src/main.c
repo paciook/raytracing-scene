@@ -44,18 +44,15 @@ color_t computar_intensidad(int profundidad, const arreglo_t *objetos, const arr
     }
 
     if(t == INFINITO){
-        return fondo;
+        return (color_t){0,0,0};
     }
-    if(t > 2)
-        printf("%f\n", t);
-    return (color_t){1,1,1};
+
     objeto_t *obj = (objeto_t*)(objetos->v[n_obj]); // Objeto que interseco
     color_t c = {0,0,0}; // Color que voy a devolver
     vector_t r = computar_direccion_rebote(d,n);
 
     // Verifico cada luz en ese punto
 
-    assert(luces->n); //Borrar
     for(size_t i = 0; i < luces->n; i++){
         luz_t *luz = (luz_t*)(luces->v[i]);
 

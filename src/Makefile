@@ -27,4 +27,4 @@ arreglo.o: arreglo.c arreglo.h
 	gcc $(CFLAGS) -c arreglo.c
 
 clean:
-	rm -vf *.o main
+	rm -vf *.o *.ppm *.bmp main

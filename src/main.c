@@ -44,7 +44,7 @@ color_t computar_intensidad(int profundidad, const arreglo_t *objetos, const arr
     }
 
     if(t == INFINITO){
-        return (color_t){0,0,0};
+        return fondo;
     }
 
     objeto_t *obj = (objeto_t*)(objetos->v[n_obj]); // Objeto que interseco
@@ -105,7 +105,7 @@ color_t computar_intensidad(int profundidad, const arreglo_t *objetos, const arr
     
     // Sumo el color recursivo
     color_t color_rebote = computar_intensidad(profundidad - 1, objetos, luces, ambiente, vector_interpolar_recta(p,r,EPS), r);
-    color_sumar(c, color_rebote, obj->kr);
+    c = color_sumar(c, color_rebote, obj->kr);
 
     return c;
 }
@@ -167,17 +167,18 @@ int main(int argc, char *argv[]){
 
 
     // Genero los objetos
-    arreglo_t objetos = objetos_generar(nombre_archivo);
+    arreglo_t objetos = objetos_generar("siervo.stl");
+    printf("Objetos generados.\n");
 
     // Genero las luces
     arreglo_t luces = luces_generar();
+    printf("Luces generadas.\n");
 
     
     // Genero la imagen
 
     color_t ambiente = {.05, .05, .05};
     vector_t origen = {0, 0, 0};
-
     float vz = ancho / 2 / tan(FOV/ 2 * PI / 180);
     int x,y;
     x = y = 0;
@@ -203,7 +204,7 @@ int main(int argc, char *argv[]){
     arreglo_liberar(&luces, &luz_destruir);
     imagen_destruir(img);
 
-    fprintf(stdout, "Imagen generada bajo el nombre %s\n", nombre_archivo);
+    printf("Imagen generada bajo el nombre %s\n", nombre_archivo);
 
     return 0;
 }

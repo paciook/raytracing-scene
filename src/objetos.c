@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 #define SIZEOF_FLT 4
-#define ESCALA 0.05
+#define ESCALA 1
 
 // Esferas
 
@@ -93,7 +93,7 @@ float _p_distancia( void *cuerpo, vector_t o, vector_t d,
     if(punto != NULL)
         *punto = vector_interpolar_recta(o,d,t);
     if(normal != NULL)
-        *normal = (vector_producto_interno(plano->n, d) >= 0) ? plano->n : vector_estirar(plano->n,-1);
+        *normal = (vector_producto_interno(plano->n, d) < 0) ? plano->n : vector_estirar(plano->n,-1);
     
 
     return t;
@@ -123,36 +123,38 @@ float _t_distancia( void *cuerpo, vector_t o, vector_t d,
                     vector_t *punto, vector_t *normal){
     
     triangulo_t *triang = cuerpo;
-
+    
+    float a,u,v;
     vector_t e1,e2;
     e1 = vector_resta(triang->vertices[1], triang->vertices[0]);
     e2 = vector_resta(triang->vertices[2], triang->vertices[0]);
 
     vector_t h = vector_producto_vectorial(d, e2);
-    float a = vector_producto_interno(e1, h);
+    a = vector_producto_interno(e1, h);
 
     if(a > -EPS && a < EPS) return INFINITO; // D es paralelo al triangulo
 
-    vector_t s = vector_resta(o,triang->vertices[0]);
-    float u = vector_producto_interno(s,h) / a;    
+    float f = 1.0/a;
 
-    if(u < 0 || u > 1) return INFINITO; // No hay interseccion
+    vector_t s = vector_resta(o,triang->vertices[0]);
+    u = vector_producto_interno(s,h) * f;    
+
+    if(u < 0.0 || u > 1.0) return INFINITO; // No hay interseccion
 
     vector_t q = vector_producto_vectorial(s,e1);
-    float v = vector_producto_interno(d,q) / a;
+    //printf("d.q: %f\n", vector_producto_interno(d,q));
+    v = vector_producto_interno(d,q) * f;
 
-    if(v < 0 || u + v > 1) return INFINITO; // No hay interseccion
+    //printf("v: %f u: %f\n", v, u);
+    if(v < 0.0 || u + v > 1.0) return INFINITO; // No hay interseccion
 
-    float t = vector_producto_interno(e2,q) / a;
+    float t = vector_producto_interno(e2,q) * f;
     if(t < 0) return INFINITO;
 
     if(punto != NULL)
         *punto = vector_interpolar_recta(o,d,t);
     if(normal != NULL)
-        *normal = (vector_producto_interno(triang->normal, d) > 0) ? triang->normal : vector_estirar(triang->normal,-1); // Siempre devuelvo una normal que de cara al espectador
-        
-    
-
+        *normal = (vector_producto_interno(triang->normal, d) < 0) ? triang->normal : vector_estirar(triang->normal,-1); // Siempre devuelvo una normal que de cara al espectador
 
     return t;
 }
@@ -189,21 +191,17 @@ float _m_distancia( void *cuerpo, vector_t o, vector_t d,
             if(normal != NULL) *normal = aux_n;
         }
     }
-
     return t;
 }
 
-malla_t *leer_malla(){
+malla_t *leer_malla(char *archivo){
     malla_t *m = malloc(sizeof(malla_t));
 
-    FILE *f = fopen("siervo.stl", "rb");
+    FILE *f = fopen(archivo, "rb");
     if(f == NULL) return NULL;
 
-    {
-        void *aux = malloc(80);
-        fread(aux, 80, 1, f);
-        free(aux);
-    }
+    char trash[80];
+    fread(&trash, 80, 1, f);    
  
     fread(&(m->n), sizeof(uint32_t), 1, f);
 
@@ -213,7 +211,6 @@ malla_t *leer_malla(){
         fclose(f);
         return NULL;
     }
-
 
     for(size_t i = 0; i < m->n; i++){
         triangulo_t t;
@@ -228,21 +225,17 @@ malla_t *leer_malla(){
         for(size_t j = 0; j < 3; j++){
             vector_t *ver = &((t.vertices)[j]);
             fread(&(ver->x), SIZEOF_FLT, 1, f);
-            fread(&(ver->y), SIZEOF_FLT, 1, f);
             fread(&(ver->z), SIZEOF_FLT, 1, f);
+            fread(&(ver->y), SIZEOF_FLT, 1, f);
             *ver = vector_estirar(*ver, ESCALA);
-            *ver = vector_interpolar_recta((vector_t){0,0,0}, *ver, 3);
-            *ver = vector_interpolar_recta(*ver, (vector_t){0,1,0}, -80);
-            //*ver = vector_interpolar_recta(*ver, (vector_t){0,0,1}, -80);
+            *ver = vector_interpolar_recta((vector_t){0,0,0},*ver, 0.5);
+            *ver = vector_interpolar_recta(*ver, (vector_t){0,0,1}, 1);
+            *ver = vector_interpolar_recta(*ver, (vector_t){0,1,0}, 0.25);
+            *ver = vector_interpolar_recta(*ver, (vector_t){1,0,0}, -.5);
 
         }
 
-        {
-            void *aux = malloc(sizeof(uint16_t));
-            fread(aux, sizeof(uint16_t), 1, f);
-            free(aux);
-        }
-        // printf("z: %.1f\n", t.vertices[0].z); // Borrar
+        fread(&trash, sizeof(uint16_t), 1, f);
 
         m->v[i] = t;
     }
@@ -275,6 +268,8 @@ cuerpo_distancia_t cuerpo_distancia[] = {
 // Objetos
 
 objeto_t *objeto_crear(void*c, tipo_t t, float kd, float ka, float ks, float kr, color_t color){
+    if(c==NULL) return NULL;
+
     objeto_t *obj = malloc(sizeof(objeto_t));
     if(obj == NULL) return NULL;
     
@@ -292,7 +287,6 @@ objeto_t *objeto_crear(void*c, tipo_t t, float kd, float ka, float ks, float kr,
 float objeto_distancia(objeto_t *objeto, vector_t o, vector_t d, vector_t *punto, vector_t *normal){
     cuerpo_distancia_t dist = cuerpo_distancia[objeto->tipo];
     float t = dist((void*)(objeto->cuerpo),o,d,punto,normal);
-
     return t;
 }
 
@@ -309,7 +303,7 @@ arreglo_t objetos_generar(char *nombre_archivo){
     // Esferas
     tipo_t tipo = ESF;
 
-    
+    /*
     arreglo_agregar(&objetos, objeto_crear(esfera_crear((vector_t){0, 1, 2.4}, .3), tipo, 1, 1, 0.16, .33, (color_t){1, 1, 1}));
     arreglo_agregar(&objetos, objeto_crear(esfera_crear((vector_t){-2, -.6, 3}, .3), tipo, 1, .8, 0.16, .33, (color_t){1, 0, 0}));
     arreglo_agregar(&objetos, objeto_crear(esfera_crear((vector_t){-1.73, -.6, 2}, .3), tipo, 1, 1, 0.16, .33, (color_t){1, 1, 0}));
@@ -317,22 +311,30 @@ arreglo_t objetos_generar(char *nombre_archivo){
     arreglo_agregar(&objetos, objeto_crear(esfera_crear((vector_t){0, -.6, 1}, .3), tipo, 1, 1, 0.16, .33, (color_t){1, 1, 1}));
     arreglo_agregar(&objetos, objeto_crear(esfera_crear((vector_t){1, -.6, 1.26}, .3), tipo, 1, 1, 0.16, .33, (color_t){0, 1, 1}));
     arreglo_agregar(&objetos, objeto_crear(esfera_crear((vector_t){1.73, -.6, 2}, .3), tipo, 1, 1, 0.16, .33, (color_t){0, 0, 1}));
-    arreglo_agregar(&objetos, objeto_crear(esfera_crear((vector_t){2, -.6, 3}, .3),tipo, 1, 1, 0.16, .33, (color_t){1, 0, 1}));
+    */
+    arreglo_agregar(&objetos, objeto_crear(esfera_crear((vector_t){2, -1, 4}, .3),tipo, 1, 1, 0.16, .33, (color_t){1, 0, 1}));
+
+    // Triangulos
+    tipo = TRIANG;
+
+    // espejo
+    arreglo_agregar(&objetos, objeto_crear(triangulo_crear((vector_t[3]){{-2.49, 0, 4},{-2.49, .5, 2.75},{-2.49, .5, 4}}), tipo, 0,0,0.1,1, (color_t){0.3,0.5,0.7}));
+    arreglo_agregar(&objetos, objeto_crear(triangulo_crear((vector_t[3]){{-2.49, 0, 4},{-2.49, .5, 2.75},{-2.49, 0, 2.75}}), tipo, 0,0,0.1,1, (color_t){0.3,0.5,0.7}));
 
 
     // Planos
     tipo = PLANO;
 
-    arreglo_agregar(&objetos, objeto_crear(plano_crear((vector_t){0,-1,0}, (vector_t){0,1,0}), tipo, 1,1,0.2,0.3, (color_t){1,1,1}));
+    arreglo_agregar(&objetos, objeto_crear(plano_crear((vector_t){0, 0, 4.5}, (vector_t){0,0,1}), tipo, .4,1,0.2,0, (color_t){1,0.5,0.5})); // Pared fondo
+    arreglo_agregar(&objetos, objeto_crear(plano_crear((vector_t){0, -1.5, 0}, (vector_t){0,1,0}), tipo, .4,1,0.2,0, (color_t){1,1,1})); // Piso
+    arreglo_agregar(&objetos, objeto_crear(plano_crear((vector_t){0, 1.5, 0}, (vector_t){0,1,0}), tipo, .4,1,0.2,0, (color_t){1,1,1})); // Techo
+    arreglo_agregar(&objetos, objeto_crear(plano_crear((vector_t){-2.5, 0, 0}, (vector_t){1,0,0}), tipo, .4,1,0.2,0, (color_t){1,1,1})); // Pared izq
+    arreglo_agregar(&objetos, objeto_crear(plano_crear((vector_t){2.5, -1, 0}, (vector_t){1,0,0}), tipo, .4,1,0.2,0, (color_t){1,1,1})); // Pared der
 
-    // Triangulos
-    tipo = TRIANG;
 
-    arreglo_agregar(&objetos, objeto_crear(triangulo_crear((vector_t[3]){{-1, 0.2, 1.26},{1.73, 0.2, 2},{0, 1, 2.4}}), tipo, 1,1,0.3,0.3, (color_t){0.3,0.5,0.7}));
-    
     // Mallas
     tipo = MALLA;
-    arreglo_agregar(&objetos, objeto_crear(leer_malla(), tipo, 0.7, 0.7 ,0.2, 0.4, (color_t){1,0,0}));
+    arreglo_agregar(&objetos, objeto_crear(leer_malla("box.stl"), tipo, 0.7, 0.5 ,0.4, 0.1, (color_t){.6,.3,.2}));
 
     for(size_t i = 0; i < objetos.n; i++)
         assert(objetos.v[i] != NULL);

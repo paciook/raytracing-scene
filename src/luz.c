@@ -18,12 +18,10 @@ luz_t *luz_crear(vector_t posicion, color_t color, bool es_puntual){
 arreglo_t luces_generar(){
     arreglo_t luces = {NULL, 0};
 
-    assert(arreglo_agregar(&luces, luz_crear(vector_normalizar((vector_t){0, 1, 0}), (color_t){.2, .2, .2}, false)));
-    assert(arreglo_agregar(&luces, luz_crear((vector_t){-2, 10, 2.5}, (color_t){.9, 0, 0}, true)));
-    assert(arreglo_agregar(&luces, luz_crear((vector_t){2, 10, 2.5}, (color_t){0, .9, 0}, true)));
-    assert(arreglo_agregar(&luces, luz_crear((vector_t){0, 10, 5}, (color_t){0, 0, .9}, true)));
+    assert(arreglo_agregar(&luces, luz_crear((vector_t){2, 1.4, 4}, (color_t){1, 1, 1}, true)));
+    assert(arreglo_agregar(&luces, luz_crear((vector_t){-2, 1.4, 4}, (color_t){1, 1, 1}, true)));
+    assert(arreglo_agregar(&luces, luz_crear((vector_t){0, .5, .5}, (color_t){1, 1, 1}, true)));
 
-    assert(luces.n == 4);
     for(size_t i = 0; i < luces.n; i++)
         assert(luces.v[i] != NULL);
 

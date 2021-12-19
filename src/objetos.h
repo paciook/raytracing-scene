@@ -7,7 +7,7 @@
 #include <float.h>
 
 #define INFINITO FLT_MAX
-#define EPS 0.00001
+#define EPS 0.0001
 
 
 typedef enum {ESF, PLANO, TRIANG, MALLA} tipo_t;

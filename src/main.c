@@ -73,9 +73,7 @@ color_t computar_intensidad(int profundidad, const arreglo_t *objetos, const arr
         
         // Compruebo si hay sombra sobre esa luz
         for(size_t j = 0; j < objetos->n; j++){
-            if(j == n_obj) continue;
-
-            float distancia_objeto = objeto_distancia(objetos->v[j],p,dir_luz,NULL,NULL);
+            float distancia_objeto = objeto_distancia(objetos->v[j],vector_interpolar_recta(p,dir_luz,EPS),dir_luz,NULL,NULL);
             if( (hay_sombra = (distancia_objeto < distancia_luz)) ) break;
         }
 
@@ -92,6 +90,7 @@ color_t computar_intensidad(int profundidad, const arreglo_t *objetos, const arr
                 float termino_rebote = obj->ks * pow((prod_lr >= 0 ? prod_lr : 0), ALPHA);
 
                 factor_angulo = termino_normal + termino_rebote;
+                // printf("tn: %f tr: %f\n", termino_normal, termino_rebote);
             }
             color_t c_absorvido = color_absorber(luz->color, obj->color);
 
@@ -103,8 +102,8 @@ color_t computar_intensidad(int profundidad, const arreglo_t *objetos, const arr
     // Sumo la luz ambiente
     c = color_sumar(c, ambiente, obj->ka);
     
-    // Sumo el color recursivo
-    color_t color_rebote = computar_intensidad(profundidad - 1, objetos, luces, ambiente, vector_interpolar_recta(p,r,EPS), r);
+    // Sumo el color del rebote
+    color_t color_rebote = computar_intensidad(--profundidad, objetos, luces, ambiente, vector_interpolar_recta(p,r,EPS), r);
     c = color_sumar(c, color_rebote, obj->kr);
 
     return c;

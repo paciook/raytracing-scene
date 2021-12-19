@@ -20,7 +20,6 @@ arreglo_t luces_generar(void){
 
     assert(arreglo_agregar(&luces, luz_crear((vector_t){-500, 400, 20}, (color_t){1, 1, 1}, true)));
     assert(arreglo_agregar(&luces, luz_crear((vector_t){1, 2, 0}, (color_t){1, .2, .2}, true)));
-    //assert(arreglo_agregar(&luces, luz_crear((vector_t){0, .5, .5}, (color_t){1, 1, 1}, true)));
 
     for(size_t i = 0; i < luces.n; i++)
         assert(luces.v[i] != NULL);

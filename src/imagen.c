@@ -107,7 +107,7 @@ void escribir_BMP(imagen_t *imagen, FILE *f){
         uint32_t tamanoEncabezadoI = 40;
         
         size_t anchoPixel = ancho * 3;
-        extra = /*4 -*/ (anchoPixel % 4);
+        extra = 4 - (anchoPixel % 4);
         extra = (extra - 4) ? extra : 0;
         size_t scanline = extra ? anchoPixel + extra : anchoPixel;
         uint32_t tamanoPixeles = alto * scanline;

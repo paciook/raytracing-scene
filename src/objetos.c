@@ -139,10 +139,8 @@ float _t_distancia( void *cuerpo, vector_t o, vector_t d,
     if(u < 0.0 || u > 1.0) return INFINITO; // No hay interseccion
 
     vector_t q = vector_producto_vectorial(s,e1);
-    //printf("d.q: %f\n", vector_producto_interno(d,q));
     v = vector_producto_interno(d,q) * f;
 
-    //printf("v: %f u: %f\n", v, u);
     if(v < 0.0 || u + v > 1.0) return INFINITO; // No hay interseccion
 
     float t = vector_producto_interno(e2,q) * f;

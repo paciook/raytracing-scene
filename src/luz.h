@@ -15,6 +15,6 @@ typedef struct {
 
 void luz_destruir(void *luz);
 luz_t *luz_crear(vector_t posicion, color_t color, bool es_puntual);
-arreglo_t luces_generar();
+arreglo_t luces_generar(void);
 
 #endif

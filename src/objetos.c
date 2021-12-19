@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 #define SIZEOF_FLT 4
-#define ESCALA 1
+#define ESCALA .02
 
 // Esferas
 
@@ -217,21 +217,18 @@ malla_t *leer_malla(char *archivo){
         
         vector_t *nor = &(t.normal);
         fread(&(nor->x), SIZEOF_FLT, 1, f);
-        fread(&(nor->y), SIZEOF_FLT, 1, f);
         fread(&(nor->z), SIZEOF_FLT, 1, f);
+        fread(&(nor->y), SIZEOF_FLT, 1, f);
 
         t.normal = vector_normalizar(t.normal);
 
         for(size_t j = 0; j < 3; j++){
             vector_t *ver = &((t.vertices)[j]);
-            fread(&(ver->x), SIZEOF_FLT, 1, f);
             fread(&(ver->z), SIZEOF_FLT, 1, f);
             fread(&(ver->y), SIZEOF_FLT, 1, f);
+            fread(&(ver->x), SIZEOF_FLT, 1, f);
             *ver = vector_estirar(*ver, ESCALA);
-            *ver = vector_interpolar_recta((vector_t){0,0,0},*ver, 0.5);
-            *ver = vector_interpolar_recta(*ver, (vector_t){0,0,1}, 1);
-            *ver = vector_interpolar_recta(*ver, (vector_t){0,1,0}, 0.25);
-            *ver = vector_interpolar_recta(*ver, (vector_t){1,0,0}, -.5);
+            *ver = vector_interpolar_recta(*ver, (vector_t){1.5,-1.5,2}, 1);
 
         }
 
@@ -297,44 +294,30 @@ void objeto_destruir(void *estructura){
     free(objeto);
 }
 
-arreglo_t objetos_generar(char *nombre_archivo){
+arreglo_t objetos_generar(void){
     arreglo_t objetos = {NULL, 0};
 
     // Esferas
     tipo_t tipo = ESF;
-
-    /*
-    arreglo_agregar(&objetos, objeto_crear(esfera_crear((vector_t){0, 1, 2.4}, .3), tipo, 1, 1, 0.16, .33, (color_t){1, 1, 1}));
-    arreglo_agregar(&objetos, objeto_crear(esfera_crear((vector_t){-2, -.6, 3}, .3), tipo, 1, .8, 0.16, .33, (color_t){1, 0, 0}));
-    arreglo_agregar(&objetos, objeto_crear(esfera_crear((vector_t){-1.73, -.6, 2}, .3), tipo, 1, 1, 0.16, .33, (color_t){1, 1, 0}));
-    arreglo_agregar(&objetos, objeto_crear(esfera_crear((vector_t){-1, -.6, 1.26}, .3), tipo, 1, 1, 0.16, .33, (color_t){0, 1, 0}));
-    arreglo_agregar(&objetos, objeto_crear(esfera_crear((vector_t){0, -.6, 1}, .3), tipo, 1, 1, 0.16, .33, (color_t){1, 1, 1}));
-    arreglo_agregar(&objetos, objeto_crear(esfera_crear((vector_t){1, -.6, 1.26}, .3), tipo, 1, 1, 0.16, .33, (color_t){0, 1, 1}));
-    arreglo_agregar(&objetos, objeto_crear(esfera_crear((vector_t){1.73, -.6, 2}, .3), tipo, 1, 1, 0.16, .33, (color_t){0, 0, 1}));
-    */
-    arreglo_agregar(&objetos, objeto_crear(esfera_crear((vector_t){2, -1, 4}, .3),tipo, 1, 1, 0.16, .33, (color_t){1, 0, 1}));
+    
+    arreglo_agregar(&objetos, objeto_crear(esfera_crear((vector_t){1, -.25, 2}, .3),tipo, 1, 1, 0.16, .05, (color_t){1, 0, 1}));
 
     // Triangulos
     tipo = TRIANG;
 
-    // espejo
-    arreglo_agregar(&objetos, objeto_crear(triangulo_crear((vector_t[3]){{-2.49, 0, 4},{-2.49, .5, 2.75},{-2.49, .5, 4}}), tipo, 0,0,0.1,1, (color_t){0.3,0.5,0.7}));
-    arreglo_agregar(&objetos, objeto_crear(triangulo_crear((vector_t[3]){{-2.49, 0, 4},{-2.49, .5, 2.75},{-2.49, 0, 2.75}}), tipo, 0,0,0.1,1, (color_t){0.3,0.5,0.7}));
+    arreglo_agregar(&objetos, objeto_crear(triangulo_crear((vector_t[3]){{1, -1, 4},{-2.25, 1, 2.25},{1, 1, 3.75}}), tipo, 0,0,0.1,1, (color_t){0.3,0.5,0.7}));
+    arreglo_agregar(&objetos, objeto_crear(triangulo_crear((vector_t[3]){{1, -1, 4},{-2.25, 1, 2.25},{-2.25, -1, 2.5}}), tipo, 0,0,0.1,1, (color_t){0.3,0.5,0.7}));
 
 
     // Planos
     tipo = PLANO;
 
-    arreglo_agregar(&objetos, objeto_crear(plano_crear((vector_t){0, 0, 4.5}, (vector_t){0,0,1}), tipo, .4,1,0.2,0, (color_t){1,0.5,0.5})); // Pared fondo
-    arreglo_agregar(&objetos, objeto_crear(plano_crear((vector_t){0, -1.5, 0}, (vector_t){0,1,0}), tipo, .4,1,0.2,0, (color_t){1,1,1})); // Piso
-    arreglo_agregar(&objetos, objeto_crear(plano_crear((vector_t){0, 1.5, 0}, (vector_t){0,1,0}), tipo, .4,1,0.2,0, (color_t){1,1,1})); // Techo
-    arreglo_agregar(&objetos, objeto_crear(plano_crear((vector_t){-2.5, 0, 0}, (vector_t){1,0,0}), tipo, .4,1,0.2,0, (color_t){1,1,1})); // Pared izq
-    arreglo_agregar(&objetos, objeto_crear(plano_crear((vector_t){2.5, -1, 0}, (vector_t){1,0,0}), tipo, .4,1,0.2,0, (color_t){1,1,1})); // Pared der
-
-
+    arreglo_agregar(&objetos, objeto_crear(plano_crear((vector_t){0, 0, 300}, (vector_t){0,0,1}), tipo, .9,1,0.8,0, (color_t){.5,.2,.7})); // Fondo
+    arreglo_agregar(&objetos, objeto_crear(plano_crear((vector_t){0, -1.5, 0}, (vector_t){0,1,0}), tipo, .9,1,0.8,.4, (color_t){.9,.9,.9})); // Mar
+    
     // Mallas
     tipo = MALLA;
-    arreglo_agregar(&objetos, objeto_crear(leer_malla("box.stl"), tipo, 0.7, 0.5 ,0.4, 0.1, (color_t){.6,.3,.2}));
+    arreglo_agregar(&objetos, objeto_crear(leer_malla("cat.stl"), tipo, 0.7, 0.5 ,0.4, 0.1, (color_t){.6,.3,.2}));
 
     for(size_t i = 0; i < objetos.n; i++)
         assert(objetos.v[i] != NULL);

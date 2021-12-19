@@ -77,6 +77,8 @@ void escribir_int32_little_endian(FILE *f, int32_t v){
 }
 
 void escribir_PPM(const imagen_t *imagen, FILE *f){
+    if(f == NULL) return;
+    
     size_t ancho,alto;
     imagen_dimensiones(imagen, &ancho, &alto);
 
@@ -93,6 +95,8 @@ void escribir_PPM(const imagen_t *imagen, FILE *f){
 }
 
 void escribir_BMP(imagen_t *imagen, FILE *f){
+    if(f == NULL) return;
+    
     // escribo el encabezado del archivo
     fwrite("BM", 1, 2, f);
 
@@ -103,7 +107,7 @@ void escribir_BMP(imagen_t *imagen, FILE *f){
         uint32_t tamanoEncabezadoI = 40;
         
         size_t anchoPixel = ancho * 3;
-        extra = 4 - (anchoPixel % 4);
+        extra = /*4 -*/ (anchoPixel % 4);
         extra = (extra - 4) ? extra : 0;
         size_t scanline = extra ? anchoPixel + extra : anchoPixel;
         uint32_t tamanoPixeles = alto * scanline;
@@ -152,14 +156,10 @@ bool imagen_imprimir(char n[], bool isBin, imagen_t *img){
 
     if(isBin){
         f = fopen(n, "wb");
-        if(f == NULL) return false;
-
-        escribir_BMP(img,f);
+        if(f != NULL) escribir_BMP(img,f);
     } else {
         f = fopen(n, "wt");
-        if(f == NULL) return false;
-
-        escribir_PPM(img,f);
+        if(f != NULL) escribir_PPM(img,f);
     }
 
     fclose(f);

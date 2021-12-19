@@ -117,7 +117,7 @@ void escribir_BMP(imagen_t *imagen, FILE *f){
         escribir_int32_little_endian(f, tamanoArchivo); //tamano del archivo
         escribir_int16_little_endian(f, 0); // reservado
         escribir_int16_little_endian(f, 0); // reservado
-        escribir_int32_little_endian(f, 54); //tamano del offset
+        escribir_int32_little_endian(f, 54); // tamano del offset
     }
 
     

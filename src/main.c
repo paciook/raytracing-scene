@@ -1,19 +1,9 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <assert.h>
-
+#include "main.h"
 #include "arreglo.h"
-#include "color.h"
 #include "vector.h"
 #include "luz.h"
 #include "objetos.h"
 #include "imagen.h"
-
-#define ALPHA 10 // Exponente del termino especular
-#define FOV 140
-#define PI 3.1415926535897932
 
 color_t fondo = {.1,.1,.1};
 

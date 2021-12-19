@@ -1,10 +1,7 @@
 #include "objetos.h"
-#include <stdlib.h>
-#include <math.h>
-#include <assert.h>
-#include <stdio.h>
-#include <string.h>
+
 #include <stdint.h>
+#include "main.h"
 
 #define SIZEOF_FLT 4
 #define ESCALA .02

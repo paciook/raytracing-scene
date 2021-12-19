@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "main.h": "c",
+        "objetos.h": "c",
+        "arreglo.h": "c",
+        "vector.h": "c"
+    }
+}

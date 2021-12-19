@@ -6,10 +6,6 @@
 #include "color.h"
 #include <float.h>
 
-#define INFINITO FLT_MAX
-#define EPS .001
-
-
 typedef enum {ESF, PLANO, TRIANG, MALLA} tipo_t;
 
 typedef struct {

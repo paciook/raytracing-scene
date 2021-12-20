@@ -1,21 +1,11 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <assert.h>
-
+#include "main.h"
 #include "arreglo.h"
-#include "color.h"
 #include "vector.h"
 #include "luz.h"
 #include "objetos.h"
 #include "imagen.h"
 
-#define ALPHA 10 // Exponente del termino especular
-#define FOV 90
-#define PI 3.1415926535897932
-
-color_t fondo = {0,0,0};
+color_t fondo = {.1,.1,.1};
 
 vector_t computar_direccion_rebote(vector_t d, vector_t n){
     vector_t r = vector_estirar(n, 2*vector_producto_interno(d,n));
@@ -28,90 +18,93 @@ color_t computar_intensidad(int profundidad, const arreglo_t *objetos, const arr
     if(!profundidad) return (color_t){0,0,0};
 
     vector_t p,n; // Punto y normal
-    size_t n_obj; // Numero del objeto que intersecto
-    float t = INFINITO; // Distancia a la interseccion
+    objeto_t *obj = NULL; // Objeto que interseco
 
     // Obtengo el objeto mas cercano en la direccion en la que miro
-    for(size_t i = 0; i < objetos->n; i++){
-        vector_t aux_p,aux_n;
-        float act = objeto_distancia(objetos->v[i],o,d,&aux_p,&aux_n);
-        if(act < t){
-            t = act;
-            n_obj = i;
-            p = aux_p;
-            n = aux_n;
+    {
+        float t = INFINITO; // Distancia a la interseccion
+        for(size_t i = 0; i < objetos->n; i++){
+            vector_t aux_p,aux_n;
+            float act = objeto_distancia(objetos->v[i],o,d,&aux_p,&aux_n);
+            if(act < t){
+                t = act;
+                obj = (objeto_t*)(objetos->v[i]);
+                p = aux_p;
+                n = aux_n;
+            }
         }
     }
 
-    if(t == INFINITO){
-        return (color_t){0,0,0};
-    }
+    if(obj == NULL)
+        return fondo;
 
-    if(t > 2){
-        printf("%f\n", t);
-    }
-    
-    return (color_t){1,1,1};
-    objeto_t *obj = (objeto_t*)(objetos->v[n_obj]); // Objeto que interseco
     color_t c = {0,0,0}; // Color que voy a devolver
     vector_t r = computar_direccion_rebote(d,n);
 
     // Verifico cada luz en ese punto
 
-    assert(luces->n); //Borrar
     for(size_t i = 0; i < luces->n; i++){
+
         luz_t *luz = (luz_t*)(luces->v[i]);
 
-        vector_t dir_luz;
+        vector_t direccion_luz;
         float distancia_luz;
 
         // Calculo la direccion de la luz segun es_puntual
         if(luz->es_puntual){
+
             vector_t pl = vector_resta(luz->posicion,p);
-            dir_luz = vector_normalizar(pl);
+            direccion_luz = vector_normalizar(pl);
             distancia_luz = vector_norma(pl);
+
         } else {
-            dir_luz = luz->posicion;
+
+            direccion_luz = luz->posicion;
             distancia_luz = INFINITO;
+
         }
 
-        bool hay_sombra = false; // No hay sombra hasta que demuestre lo contrario!
-        
         // Compruebo si hay sombra sobre esa luz
+        bool hay_sombra = false;
         for(size_t j = 0; j < objetos->n; j++){
-            if(j == n_obj) continue;
-
-            float distancia_objeto = objeto_distancia(objetos->v[j],p,dir_luz,NULL,NULL);
+            
+            vector_t p_desplazado = vector_interpolar_recta(p,direccion_luz,EPS);
+            float distancia_objeto = objeto_distancia(objetos->v[j], p_desplazado, direccion_luz, NULL, NULL);
+            
             if( (hay_sombra = (distancia_objeto < distancia_luz)) ) break;
+
         }
 
         if(!hay_sombra){
             // Calculo factor de angulo
             float factor_angulo;
             {
+
                 // Termino del angulo de la normal
-                float prod_ln = vector_producto_interno(dir_luz,n);
+                float prod_ln = vector_producto_interno(direccion_luz,n);
                 float termino_normal = obj->kd *  (prod_ln >= 0 ? prod_ln : 0);
 
                 // Termino del angulo del rebote
-                float prod_lr = vector_producto_interno(dir_luz,r);
+                float prod_lr = vector_producto_interno(direccion_luz,r);
                 float termino_rebote = obj->ks * pow((prod_lr >= 0 ? prod_lr : 0), ALPHA);
 
                 factor_angulo = termino_normal + termino_rebote;
+
             }
-            color_t c_absorvido = color_absorber(luz->color, obj->color);
 
             // Sumo el color de la luz
-            c = color_sumar(c, c_absorvido, factor_angulo);
+            c = color_sumar(c, color_absorber(luz->color, obj->color), factor_angulo);
+
         }
+
     }
 
     // Sumo la luz ambiente
     c = color_sumar(c, ambiente, obj->ka);
     
-    // Sumo el color recursivo
-    color_t color_rebote = computar_intensidad(profundidad - 1, objetos, luces, ambiente, vector_interpolar_recta(p,r,EPS), r);
-    color_sumar(c, color_rebote, obj->kr);
+    // Sumo el color del rebote
+    color_t color_rebote = computar_intensidad(--profundidad, objetos, luces, ambiente, vector_interpolar_recta(p,r,EPS), r);
+    c = color_sumar(c, color_rebote, obj->kr);
 
     return c;
 }
@@ -162,6 +155,7 @@ imagen_t *validar_argumentos(int argc, char *argv[], int *an, int *al, size_t *p
 }
 
 int main(int argc, char *argv[]){
+    
     int ancho,alto;
     size_t prof;
     char *nombre_archivo;
@@ -173,17 +167,19 @@ int main(int argc, char *argv[]){
 
 
     // Genero los objetos
-    arreglo_t objetos = objetos_generar(nombre_archivo);
+    arreglo_t objetos = objetos_generar();
+    printf("Objetos generados.\n");
 
     // Genero las luces
     arreglo_t luces = luces_generar();
+    printf("Luces generadas.\n");
 
     
     // Genero la imagen
 
     color_t ambiente = {.05, .05, .05};
     vector_t origen = {0, 0, 0};
-
+    
     float vz = ancho / 2 / tan(FOV/ 2 * PI / 180);
     int x,y;
     x = y = 0;
@@ -209,7 +205,7 @@ int main(int argc, char *argv[]){
     arreglo_liberar(&luces, &luz_destruir);
     imagen_destruir(img);
 
-    fprintf(stdout, "Imagen generada bajo el nombre %s\n", nombre_archivo);
+    printf("Imagen generada bajo el nombre %s\n", nombre_archivo);
 
     return 0;
 }

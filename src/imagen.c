@@ -77,6 +77,8 @@ void escribir_int32_little_endian(FILE *f, int32_t v){
 }
 
 void escribir_PPM(const imagen_t *imagen, FILE *f){
+    if(f == NULL) return;
+    
     size_t ancho,alto;
     imagen_dimensiones(imagen, &ancho, &alto);
 
@@ -93,6 +95,8 @@ void escribir_PPM(const imagen_t *imagen, FILE *f){
 }
 
 void escribir_BMP(imagen_t *imagen, FILE *f){
+    if(f == NULL) return;
+    
     // escribo el encabezado del archivo
     fwrite("BM", 1, 2, f);
 
@@ -113,7 +117,7 @@ void escribir_BMP(imagen_t *imagen, FILE *f){
         escribir_int32_little_endian(f, tamanoArchivo); //tamano del archivo
         escribir_int16_little_endian(f, 0); // reservado
         escribir_int16_little_endian(f, 0); // reservado
-        escribir_int32_little_endian(f, 54); //tamano del offset
+        escribir_int32_little_endian(f, 54); // tamano del offset
     }
 
     
@@ -152,14 +156,10 @@ bool imagen_imprimir(char n[], bool isBin, imagen_t *img){
 
     if(isBin){
         f = fopen(n, "wb");
-        if(f == NULL) return false;
-
-        escribir_BMP(img,f);
+        if(f != NULL) escribir_BMP(img,f);
     } else {
         f = fopen(n, "wt");
-        if(f == NULL) return false;
-
-        escribir_PPM(img,f);
+        if(f != NULL) escribir_PPM(img,f);
     }
 
     fclose(f);
